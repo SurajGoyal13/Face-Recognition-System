@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Face Recognition System</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Inter, Arial, sans-serif;
+            background:
+                radial-gradient(circle at top left, #202b4a 0%, transparent 35%),
+                radial-gradient(circle at bottom right, #163b35 0%, transparent 30%),
+                #0b1020;
+            color: #f5f7ff;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: min(920px, 92%);
+            margin: 60px auto;
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 7px 14px;
+            border-radius: 999px;
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(129, 140, 248, 0.35);
+            color: #a5b4fc;
+            font-size: 13px;
+            margin-bottom: 15px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(34px, 6vw, 56px);
+            letter-spacing: -1.5px;
+        }
+
+        .subtitle {
+            margin-top: 12px;
+            color: #aeb7d0;
+            font-size: 16px;
+        }
+
+        .card {
+            background: rgba(19, 27, 48, 0.88);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 22px;
+            padding: 28px;
+            box-shadow: 0 25px 70px rgba(0,0,0,0.35);
+            backdrop-filter: blur(14px);
+        }
+
+        .upload-area {
+            border: 2px dashed #39486f;
+            border-radius: 18px;
+            padding: 35px 20px;
+            text-align: center;
+            background: rgba(255,255,255,0.02);
+            transition: 0.25s;
+        }
+
+        .upload-area:hover {
+            border-color: #818cf8;
+            background: rgba(129, 140, 248, 0.05);
+        }
+
+        .upload-icon {
+            font-size: 42px;
+            margin-bottom: 12px;
+        }
+
+        .upload-label {
+            display: block;
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .upload-help {
+            color: #8994af;
+            font-size: 13px;
+            margin-bottom: 18px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-button {
+            display: inline-block;
+            padding: 11px 18px;
+            border-radius: 10px;
+            background: #26345a;
+            color: white;
+            cursor: pointer;
+        }
+
+        .selected-file {
+            margin-top: 14px;
+            color: #8ef0c3;
+            font-size: 14px;
+            min-height: 20px;
+        }
+
+        .action {
+            width: 100%;
+            margin-top: 22px;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            box-shadow: 0 10px 30px rgba(99,102,241,0.25);
+            transition: 0.2s;
+        }
+
+        .action:hover {
+            transform: translateY(-1px);
+        }
+
+        .action:disabled {
+            cursor: not-allowed;
+            opacity: 0.75;
+            transform: none;
+        }
+
+        .status {
+            display: none;
+            margin-top: 18px;
+            text-align: center;
+            color: #aeb7d0;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.2);
+            border-top-color: #818cf8;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .error {
+            margin-top: 22px;
+            padding: 15px 17px;
+            border-radius: 12px;
+            background: rgba(239, 68, 68, 0.10);
+            border: 1px solid rgba(239, 68, 68, 0.30);
+            color: #fca5a5;
+        }
+
+        .results {
+            margin-top: 28px;
+        }
+
+        .results-title {
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+
+        .result-card {
+            background: #121a30;
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 16px;
+            padding: 22px;
+            margin-top: 14px;
+        }
+
+        .person {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .name {
+            font-size: 24px;
+            font-weight: 800;
+        }
+
+        .confidence {
+            font-size: 14px;
+            color: #aeb7d0;
+        }
+
+        .bar {
+            height: 10px;
+            border-radius: 99px;
+            background: #202a46;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 99px;
+            background: linear-gradient(90deg, #34d399, #6366f1);
+        }
+
+        .footer {
+            text-align: center;
+            color: #6f7a95;
+            font-size: 12px;
+            margin-top: 24px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="hero">
+        <div class="badge">Computer Vision • Machine Learning • Flask</div>
+
+        <h1>Face Recognition System</h1>
+
+        <div class="subtitle">
+            Detect faces and identify known people using a trained ML model.
+        </div>
+    </div>
+
+    <div class="card">
+
+        <form
+            action="/predict"
+            method="POST"
+            enctype="multipart/form-data"
+            onsubmit="startProcessing()"
+        >
+
+            <div class="upload-area">
+
+                <div class="upload-icon">📷</div>
+
+                <div class="upload-label">
+                    Upload an image
+                </div>
+
+                <div class="upload-help">
+                    Use a clear image containing one or more faces.
+                </div>
+
+                <label for="image" class="file-button">
+                    Choose Image
+                </label>
+
+                <input
+                    id="image"
+                    type="file"
+                    name="image"
+                    accept="image/*"
+                    required
+                    onchange="showFileName(this)"
+                >
+
+                <div id="selected-file" class="selected-file">
+                </div>
+
+            </div>
+
+            <button id="recognize-btn" class="action" type="submit">
+                Recognize Face
+            </button>
+
+            <div id="status" class="status">
+                <span class="spinner"></span>
+                Detecting and recognizing faces...
+            </div>
+
+        </form>
+
+
+        {% if error %}
+
+        <div class="error">
+            <strong>Unable to process:</strong><br>
+            {{ error }}
+        </div>
+
+        {% endif %}
+
+
+        {% if results %}
+
+        <div class="results">
+
+            <div class="results-title">
+                Recognition Results
+            </div>
+
+            {% for result in results %}
+
+            <div class="result-card">
+
+                <div class="person">
+
+                    <div class="name">
+                        {% if result.name == "Unknown" %}
+                            👤 Unknown Person
+                        {% else %}
+                            ✅ {{ result.name }}
+                        {% endif %}
+                    </div>
+
+                    <div class="confidence">
+                        Confidence: {{ result.confidence }}%
+                    </div>
+
+                </div>
+
+                <div class="bar">
+                    <div
+                        class="bar-fill"
+                        style="width: {{ result.confidence }}%;"
+                    ></div>
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+    <div class="footer">
+        Face Recognition System • OpenCV + Scikit-learn + Flask
+    </div>
+
+</div>
+
+
+<script>
+    function showFileName(input) {
+        const output = document.getElementById("selected-file");
+
+        if (input.files.length > 0) {
+            output.textContent =
+                "Selected: " + input.files[0].name;
+        } else {
+            output.textContent = "";
+        }
+    }
+
+    function startProcessing() {
+        const button = document.getElementById("recognize-btn");
+        const status = document.getElementById("status");
+
+        button.disabled = true;
+        button.textContent = "Processing...";
+        status.style.display = "block";
+    }
+</script>
+
+</body>
+</html>
